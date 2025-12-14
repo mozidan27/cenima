@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:cenima/services/http_service.dart';
+import 'package:cenima/services/movie_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get_it/get_it.dart';
@@ -35,6 +36,7 @@ class _SplashPageState extends State<SplashPage> {
       ),
     );
     getIt.registerSingleton<HttpService>(HttpService());
+    getIt.registerSingleton<MovieService>(MovieService());
   }
 
   @override
