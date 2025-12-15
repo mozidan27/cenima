@@ -1,6 +1,8 @@
 import 'dart:ui';
 
+import 'package:cenima/models/movie.dart';
 import 'package:cenima/models/search_category.dart';
+import 'package:cenima/widgets/movie_tile.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -62,7 +64,14 @@ class MainPage extends ConsumerWidget {
         crossAxisAlignment: CrossAxisAlignment.center,
         mainAxisAlignment: MainAxisAlignment.start,
         mainAxisSize: MainAxisSize.max,
-        children: [_topBarWidget()],
+        children: [
+          _topBarWidget(),
+          Container(
+            height: deviceHight! * 0.83,
+            padding: EdgeInsets.symmetric(horizontal: deviceHight! * 0.01),
+            child: _movieListViewWidget(),
+          ),
+        ],
       ),
     );
   }
@@ -136,5 +145,49 @@ class MainPage extends ConsumerWidget {
         ),
       ],
     );
+  }
+
+  _movieListViewWidget() {
+    final List<Movie> movies = [];
+    for (var i = 0; i < 20; i++) {
+      movies.add(
+        Movie(
+          name: "john wick",
+          language: "EN",
+          isAdult: false,
+          description:
+              "     While working underground to fix a water main, Brooklyn plumbers—and brothers—Mario and Luigi are transported down a mysterious pipe and wander into a magical new world. But when the brothers are separated, Mario embarks on an epic quest to find Luigi",
+          posterPath: "/qNBAXBIQlnOThrVvA6mA2B5ggV6.jpg",
+          backdropPath: "/nDxJJyA5giRhXx96q1sWbOUjMBI.jpg",
+          rating: 7.5,
+          releaseDate: "2023-04-05",
+        ),
+      );
+    }
+    if (movies.isNotEmpty) {
+      return ListView.builder(
+        itemCount: movies.length,
+        itemBuilder: (context, index) {
+          return Padding(
+            padding: EdgeInsets.symmetric(
+              vertical: deviceHight! * 0.01,
+              horizontal: 0,
+            ),
+            child: GestureDetector(
+              onTap: () {},
+              child: MovieTile(
+                movie: movies[index],
+                height: deviceHight! * 0.20,
+                width: deviceWidth! * 0.85,
+              ),
+            ),
+          );
+        },
+      );
+    } else {
+      return Center(
+        child: CircularProgressIndicator(backgroundColor: Colors.white),
+      );
+    }
   }
 }
