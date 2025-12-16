@@ -24,14 +24,14 @@ class Movie {
 
   factory Movie.fromJson(Map<String, dynamic> jsonData) {
     return Movie(
-      name: jsonData["title"],
-      language: jsonData["original_language"],
-      isAdult: jsonData["adult"],
-      description: jsonData["overview"],
-      posterPath: jsonData["poster_path"],
-      backdropPath: jsonData["backdrop_path"],
-      rating: jsonData["vote_average"],
-      releaseDate: jsonData["release_date"],
+      name: jsonData["title"] ?? 'No Title',
+      language: jsonData["original_language"] ?? 'en',
+      isAdult: jsonData["adult"] ?? false,
+      description: jsonData["overview"] ?? '',
+      posterPath: jsonData["poster_path"] ?? '',
+      backdropPath: jsonData["backdrop_path"] ?? '',
+      rating: (jsonData["vote_average"] ?? 0).toDouble(),
+      releaseDate: jsonData["release_date"] ?? '',
     );
   }
 

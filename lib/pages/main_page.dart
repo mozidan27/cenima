@@ -26,11 +26,24 @@ class MainPage extends ConsumerWidget {
     deviceWidth = MediaQuery.of(context).size.width;
 
     final asyncData = ref.watch(mainPageDataControllerProvider);
-
+    mainPageDataController = ref.read(mainPageDataControllerProvider.notifier);
     return asyncData.when(
-      loading: () => const Center(child: CircularProgressIndicator()),
+      loading: () => Stack(
+        children: [
+          _backgroundImage(),
+          Center(
+            child: const CircularProgressIndicator(
+              backgroundColor: Colors.white,
+            ),
+          ),
+        ],
+      ),
       error: (e, _) => Center(child: Text(e.toString())),
       data: (data) {
+        _searchTextFieldController ??= TextEditingController(
+          text: data.searchText,
+        );
+
         return _buildUI(data);
       },
     );
@@ -81,7 +94,7 @@ class MainPage extends ConsumerWidget {
         mainAxisAlignment: MainAxisAlignment.end,
         mainAxisSize: MainAxisSize.max,
         children: [
-          _topBarWidget(),
+          _topBarWidget(data),
           Container(
             height: deviceHight! * 0.83,
             padding: EdgeInsets.symmetric(horizontal: deviceHight! * 0.01),
@@ -92,7 +105,7 @@ class MainPage extends ConsumerWidget {
     );
   }
 
-  Widget _topBarWidget() {
+  Widget _topBarWidget(MainPageData data) {
     return Container(
       height: deviceHight! * 0.08,
       decoration: BoxDecoration(
@@ -103,7 +116,7 @@ class MainPage extends ConsumerWidget {
         mainAxisSize: MainAxisSize.max,
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         crossAxisAlignment: CrossAxisAlignment.center,
-        children: [_searchFieldWidget(), _categorySelectionWidget()],
+        children: [_searchFieldWidget(), _categorySelectionWidget(data)],
       ),
     );
   }
@@ -115,7 +128,9 @@ class MainPage extends ConsumerWidget {
       height: deviceHight! * 0.05,
       child: TextField(
         controller: _searchTextFieldController,
-        onSubmitted: (input) {},
+        onSubmitted: (value) {
+          mainPageDataController!.updateTextSearch(value);
+        },
         style: TextStyle(color: Colors.white),
         decoration: InputDecoration(
           focusedBorder: border,
@@ -130,13 +145,15 @@ class MainPage extends ConsumerWidget {
     );
   }
 
-  Widget _categorySelectionWidget() {
+  Widget _categorySelectionWidget(MainPageData data) {
     return DropdownButton(
       dropdownColor: Colors.black38,
-      value: SearchCategory().popular,
+      value: data.searchCategory,
       icon: Icon(Icons.menu, color: Colors.white24),
       underline: Container(height: 1, color: Colors.white24),
-      onChanged: (value) {},
+      onChanged: (value) => value.toString().isNotEmpty
+          ? mainPageDataController!.updateSearchCategory(value.toString())
+          : null,
       items: [
         DropdownMenuItem(
           value: SearchCategory().popular,
@@ -164,33 +181,46 @@ class MainPage extends ConsumerWidget {
   }
 
   _movieListViewWidget(List<Movie> movies) {
-    // final List<Movie> movies = mainPageData.movies;
     if (movies.isEmpty) {
       return const Center(
-        child: CircularProgressIndicator(backgroundColor: Colors.white),
+        child: Text("No Movies =..", style: TextStyle(color: Colors.white)),
       );
     }
 
     if (movies.isNotEmpty) {
-      return ListView.builder(
-        padding: EdgeInsets.only(top: deviceHight! * 0.02),
-        itemCount: movies.length,
-        itemBuilder: (context, index) {
-          return Padding(
-            padding: EdgeInsets.symmetric(
-              vertical: deviceHight! * 0.01,
-              horizontal: 0,
-            ),
-            child: GestureDetector(
-              onTap: () {},
-              child: MovieTile(
-                movie: movies[index],
-                height: deviceHight! * 0.20,
-                width: deviceWidth! * 0.85,
-              ),
-            ),
-          );
+      return NotificationListener(
+        onNotification: (onScrollNotification) {
+          if (onScrollNotification is ScrollEndNotification) {
+            final before = onScrollNotification.metrics.extentBefore;
+            final max = onScrollNotification.metrics.maxScrollExtent;
+            if (before >= max - 100) {
+              mainPageDataController!.loadNextPage();
+              return true;
+            }
+            return false;
+          }
+          return false;
         },
+        child: ListView.builder(
+          padding: EdgeInsets.only(top: deviceHight! * 0.02),
+          itemCount: movies.length,
+          itemBuilder: (context, index) {
+            return Padding(
+              padding: EdgeInsets.symmetric(
+                vertical: deviceHight! * 0.01,
+                horizontal: 0,
+              ),
+              child: GestureDetector(
+                onTap: () {},
+                child: MovieTile(
+                  movie: movies[index],
+                  height: deviceHight! * 0.20,
+                  width: deviceWidth! * 0.85,
+                ),
+              ),
+            );
+          },
+        ),
       );
     }
   }

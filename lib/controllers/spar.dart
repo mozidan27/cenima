@@ -1,5 +1,4 @@
 import 'package:cenima/models/main_page_data.dart';
-import 'package:cenima/models/movie.dart';
 import 'package:cenima/models/search_category.dart';
 import 'package:cenima/services/movie_service.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -10,10 +9,10 @@ class MainPageDataController extends AsyncNotifier<MainPageData> {
 
   @override
   Future<MainPageData> build() async {
-    return await getMovies(SearchCategory().popular);
+    return _loadByCategory(SearchCategory().popular);
   }
 
-  Future<MainPageData> getMovies(String category) async {
+  Future<MainPageData> _loadByCategory(String category) async {
     final movies = category == SearchCategory().upcoming
         ? await _movieService.getUpcomingMovies(page: 1)
         : await _movieService.getPopularMovies(page: 1);
@@ -81,34 +80,6 @@ class MainPageDataController extends AsyncNotifier<MainPageData> {
     } catch (e, st) {
       state = AsyncError(e, st);
       print("Search Error: $e");
-    }
-  }
-
-  Future<void> loadNextPage() async {
-    final currentState = state.value!;
-    final nextPage = currentState.page + 1;
-
-    try {
-      List<Movie> movies;
-      if (currentState.searchText.isNotEmpty) {
-        movies = await _movieService.getSearchMovies(
-          currentState.searchText,
-          page: nextPage,
-        );
-      } else if (currentState.searchCategory == SearchCategory().upcoming) {
-        movies = await _movieService.getUpcomingMovies(page: nextPage);
-      } else {
-        movies = await _movieService.getPopularMovies(page: nextPage);
-      }
-
-      state = AsyncData(
-        currentState.copyWith(
-          movies: [...currentState.movies, ...movies],
-          page: nextPage,
-        ),
-      );
-    } catch (e, st) {
-      state = AsyncError(e, st);
     }
   }
 }
