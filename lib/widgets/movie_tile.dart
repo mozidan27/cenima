@@ -43,8 +43,7 @@ class MovieTile extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              SizedBox(
-                width: width * 0.56,
+              Expanded(
                 child: Text(
                   movie.name,
                   style: TextStyle(
@@ -55,12 +54,29 @@ class MovieTile extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                 ),
               ),
-
+              SizedBox(width: 8),
               Text(
-                movie.rating.toString(),
+                movie.rating.toStringAsFixed(1),
                 style: TextStyle(color: Colors.white, fontSize: 22),
               ),
             ],
+          ),
+
+          Container(
+            padding: EdgeInsets.only(top: height * 0.02),
+            child: Text(
+              "${movie.language.toUpperCase()} | R: ${movie.isAdult} | ${movie.releaseDate}",
+              style: TextStyle(color: Colors.white),
+            ),
+          ),
+          Container(
+            padding: EdgeInsets.only(top: height * 0.07),
+            child: Text(
+              movie.description,
+              maxLines: 7,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(color: Colors.white70, fontSize: 10),
+            ),
           ),
         ],
       ),

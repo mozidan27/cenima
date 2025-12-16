@@ -1,26 +1,42 @@
 import 'dart:ui';
-
+import 'package:cenima/controllers/main_page_data_controller.dart';
+import 'package:cenima/models/main_page_data.dart';
 import 'package:cenima/models/movie.dart';
 import 'package:cenima/models/search_category.dart';
 import 'package:cenima/widgets/movie_tile.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+final mainPageDataControllerProvider =
+    AsyncNotifierProvider<MainPageDataController, MainPageData>(
+      MainPageDataController.new,
+    );
+
 // ignore: must_be_immutable
 class MainPage extends ConsumerWidget {
   MainPage({super.key});
   double? deviceHight;
   double? deviceWidth;
+  MainPageDataController? mainPageDataController;
+  MainPageData? mainPageData;
   TextEditingController? _searchTextFieldController;
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     deviceHight = MediaQuery.of(context).size.height;
     deviceWidth = MediaQuery.of(context).size.width;
-    _searchTextFieldController = TextEditingController();
-    return _buildUI();
+
+    final asyncData = ref.watch(mainPageDataControllerProvider);
+
+    return asyncData.when(
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (e, _) => Center(child: Text(e.toString())),
+      data: (data) {
+        return _buildUI(data);
+      },
+    );
   }
 
-  Widget _buildUI() {
+  Widget _buildUI(MainPageData data) {
     return Scaffold(
       backgroundColor: Colors.black,
       body: SizedBox(
@@ -28,7 +44,7 @@ class MainPage extends ConsumerWidget {
         width: deviceWidth,
         child: Stack(
           alignment: Alignment.center,
-          children: [_backgroundImage(), _foregroundWidget()],
+          children: [_backgroundImage(), _foregroundWidget(data)],
         ),
       ),
     );
@@ -56,20 +72,20 @@ class MainPage extends ConsumerWidget {
     );
   }
 
-  Widget _foregroundWidget() {
+  Widget _foregroundWidget(MainPageData data) {
     return Container(
       padding: EdgeInsets.only(top: deviceHight! * 0.02),
       width: deviceWidth! * 0.88,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.center,
-        mainAxisAlignment: MainAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.end,
         mainAxisSize: MainAxisSize.max,
         children: [
           _topBarWidget(),
           Container(
             height: deviceHight! * 0.83,
             padding: EdgeInsets.symmetric(horizontal: deviceHight! * 0.01),
-            child: _movieListViewWidget(),
+            child: _movieListViewWidget(data.movies),
           ),
         ],
       ),
@@ -147,25 +163,17 @@ class MainPage extends ConsumerWidget {
     );
   }
 
-  _movieListViewWidget() {
-    final List<Movie> movies = [];
-    for (var i = 0; i < 20; i++) {
-      movies.add(
-        Movie(
-          name: "john wick",
-          language: "EN",
-          isAdult: false,
-          description:
-              "     While working underground to fix a water main, Brooklyn plumbers—and brothers—Mario and Luigi are transported down a mysterious pipe and wander into a magical new world. But when the brothers are separated, Mario embarks on an epic quest to find Luigi",
-          posterPath: "/qNBAXBIQlnOThrVvA6mA2B5ggV6.jpg",
-          backdropPath: "/nDxJJyA5giRhXx96q1sWbOUjMBI.jpg",
-          rating: 7.5,
-          releaseDate: "2023-04-05",
-        ),
+  _movieListViewWidget(List<Movie> movies) {
+    // final List<Movie> movies = mainPageData.movies;
+    if (movies.isEmpty) {
+      return const Center(
+        child: CircularProgressIndicator(backgroundColor: Colors.white),
       );
     }
+
     if (movies.isNotEmpty) {
       return ListView.builder(
+        padding: EdgeInsets.only(top: deviceHight! * 0.02),
         itemCount: movies.length,
         itemBuilder: (context, index) {
           return Padding(
@@ -183,10 +191,6 @@ class MainPage extends ConsumerWidget {
             ),
           );
         },
-      );
-    } else {
-      return Center(
-        child: CircularProgressIndicator(backgroundColor: Colors.white),
       );
     }
   }
