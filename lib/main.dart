@@ -2,12 +2,25 @@ import 'package:cenima/pages/main_page.dart';
 import 'package:cenima/pages/splash_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter/services.dart';
 
 void main() {
+  WidgetsFlutterBinding.ensureInitialized();
+  SystemChrome.setPreferredOrientations([
+    DeviceOrientation.portraitUp,
+    DeviceOrientation.portraitDown,
+  ]);
   runApp(
     SplashPage(
       key: UniqueKey(),
-      onInitializationComplete: () => runApp(ProviderScope(child: MyApp())),
+      onInitializationComplete: () {
+        WidgetsFlutterBinding.ensureInitialized();
+        SystemChrome.setPreferredOrientations([
+          DeviceOrientation.portraitUp,
+          DeviceOrientation.portraitDown,
+        ]);
+        runApp(ProviderScope(child: MyApp()));
+      },
     ),
   );
 }

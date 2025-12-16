@@ -20,7 +20,7 @@ class HttpService {
       String url = "$baseUrl$path";
       Map<String, dynamic> queryParams = {
         'api_key': apiKey,
-        'language': 'en-us',
+        'language': 'ar-eg',
       };
       if (query != null) {
         queryParams.addAll(query);

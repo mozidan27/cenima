@@ -74,6 +74,7 @@ class MainPage extends ConsumerWidget {
 
   Widget _buildUI(MainPageData data) {
     return Scaffold(
+      resizeToAvoidBottomInset: false,
       backgroundColor: Colors.black,
       body: SizedBox(
         height: deviceHight,
@@ -108,7 +109,7 @@ class MainPage extends ConsumerWidget {
         ),
       ),
       child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
+        filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
         child: Container(color: Colors.black.withValues(alpha: 0.2)),
       ),
     );

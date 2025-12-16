@@ -51,10 +51,6 @@ class MovieService {
       "/search/movie",
       query: {'query': searchTerm, 'page': queryPage},
     );
-
-    print('Status Code: ${response.statusCode}');
-    print('Response: ${response.data}');
-
     if (response.statusCode == 200) {
       final data = response.data as Map<String, dynamic>;
       final results = data['results'] as List<dynamic>;
