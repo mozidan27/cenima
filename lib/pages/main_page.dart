@@ -1,22 +1,43 @@
 import 'dart:ui';
 import 'package:cenima/controllers/main_page_data_controller.dart';
+import 'package:cenima/models/app_config.dart';
 import 'package:cenima/models/main_page_data.dart';
 import 'package:cenima/models/movie.dart';
 import 'package:cenima/models/search_category.dart';
 import 'package:cenima/widgets/movie_tile.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/legacy.dart';
+import 'package:get_it/get_it.dart';
 
 final mainPageDataControllerProvider =
     AsyncNotifierProvider<MainPageDataController, MainPageData>(
       MainPageDataController.new,
     );
+final selectedMovieProvider = StateProvider<Movie?>((ref) => null);
+
+final selectedMoviePosterURLProvider = Provider<String?>((ref) {
+  final selectedMovie = ref.watch(selectedMovieProvider);
+  final asyncData = ref.watch(mainPageDataControllerProvider);
+
+  if (selectedMovie != null) {
+    return selectedMovie.posterPath;
+  }
+
+  return asyncData.when(
+    data: (data) =>
+        data.movies.isNotEmpty ? data.movies.first.posterPath : null,
+    loading: () => null,
+    error: (_, __) => null,
+  );
+});
 
 // ignore: must_be_immutable
 class MainPage extends ConsumerWidget {
   MainPage({super.key});
   double? deviceHight;
   double? deviceWidth;
+  String? selectedMoviePosterURL;
   MainPageDataController? mainPageDataController;
   MainPageData? mainPageData;
   TextEditingController? _searchTextFieldController;
@@ -24,6 +45,8 @@ class MainPage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     deviceHight = MediaQuery.of(context).size.height;
     deviceWidth = MediaQuery.of(context).size.width;
+    selectedMoviePosterURL = ref.watch(selectedMoviePosterURLProvider);
+    print("Poster URL: $selectedMoviePosterURL");
 
     final asyncData = ref.watch(mainPageDataControllerProvider);
     mainPageDataController = ref.read(mainPageDataControllerProvider.notifier);
@@ -64,23 +87,29 @@ class MainPage extends ConsumerWidget {
   }
 
   Widget _backgroundImage() {
+    final AppConfig appConfig = GetIt.instance.get<AppConfig>();
+    if (selectedMoviePosterURL == null) {
+      return Container(
+        width: deviceWidth,
+        height: deviceHight,
+        color: Colors.black,
+      );
+    }
+
     return Container(
       width: deviceWidth,
       height: deviceHight,
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(10),
         image: DecorationImage(
           fit: BoxFit.cover,
           image: NetworkImage(
-            "https://i.pinimg.com/736x/79/bc/e5/79bce5086cd9a48cdb758c570c91f599.jpg",
+            "${appConfig.baseImageApiUrl}$selectedMoviePosterURL!",
           ),
         ),
       ),
       child: BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
-        child: Container(
-          decoration: BoxDecoration(color: Colors.black.withValues(alpha: 0.2)),
-        ),
+        child: Container(color: Colors.black.withValues(alpha: 0.2)),
       ),
     );
   }
@@ -201,23 +230,30 @@ class MainPage extends ConsumerWidget {
           }
           return false;
         },
-        child: ListView.builder(
-          padding: EdgeInsets.only(top: deviceHight! * 0.02),
-          itemCount: movies.length,
-          itemBuilder: (context, index) {
-            return Padding(
-              padding: EdgeInsets.symmetric(
-                vertical: deviceHight! * 0.01,
-                horizontal: 0,
-              ),
-              child: GestureDetector(
-                onTap: () {},
-                child: MovieTile(
-                  movie: movies[index],
-                  height: deviceHight! * 0.20,
-                  width: deviceWidth! * 0.85,
-                ),
-              ),
+        child: Consumer(
+          builder: (context, ref, _) {
+            return ListView.builder(
+              padding: EdgeInsets.only(top: deviceHight! * 0.02),
+              itemCount: movies.length,
+              itemBuilder: (context, index) {
+                return Padding(
+                  padding: EdgeInsets.symmetric(
+                    vertical: deviceHight! * 0.01,
+                    horizontal: 0,
+                  ),
+                  child: GestureDetector(
+                    onTap: () {
+                      ref.read(selectedMovieProvider.notifier).state =
+                          movies[index];
+                    },
+                    child: MovieTile(
+                      movie: movies[index],
+                      height: deviceHight! * 0.20,
+                      width: deviceWidth! * 0.85,
+                    ),
+                  ),
+                );
+              },
             );
           },
         ),
